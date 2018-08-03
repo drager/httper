@@ -12,6 +12,7 @@ use std::error;
 use std::fmt;
 
 type HttpClient<C> = hyper::Client<C, hyper::Body>;
+type Url<'a> = &'a str;
 
 pub type HttpsClient = HttpClient<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>;
 
@@ -89,7 +90,7 @@ where
     ///
     pub fn get<'a>(
         &'a self,
-        url: &str,
+        url: Url,
     ) -> impl Future<Item = hyper::Response<hyper::Body>, Error = Error> + Sized + 'a {
         future::result(self.parse_url(url))
             .and_then(move |url| self.http_client.get(url).map_err(Error::from))
@@ -127,7 +128,7 @@ where
     ///
     pub fn get_json<'a, T: 'a>(
         &'a self,
-        url: &str,
+        url: Url,
     ) -> impl Future<Item = T, Error = Error> + Sized + 'a
     where
         T: DeserializeOwned + fmt::Debug,
@@ -139,6 +140,17 @@ where
                 .concat2()
                 .and_then(move |body| self.deserialize_data::<T>(&body))
         })
+    }
+
+    pub fn post<'a>(
+        &'a self,
+        url: Url,
+        payload: hyper::Body,
+    ) -> impl Future<Item = hyper::Response<hyper::Body>, Error = Error> + Sized + 'a {
+        future::result(
+            self.parse_url(url)
+                .and_then(|url| hyper::Request::post(url).body(payload).map_err(Error::from)),
+        ).and_then(move |request| self.http_client.request(request).map_err(Error::from))
     }
 
     /// Parses the url `&str` to a `hyper::Uri`.

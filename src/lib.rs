@@ -16,8 +16,7 @@ pub mod client;
 #[cfg(test)]
 mod tests {
     use super::client::{HttperClient, HttpsClient};
-    use futures::Future;
-    use hyper;
+    use hyper::{self, rt::Future};
     use std::net::SocketAddr;
     use std::str;
     use std::thread;
@@ -63,5 +62,28 @@ mod tests {
         );
 
         assert_eq!(data, result.unwrap());
+    }
+
+    #[test]
+    fn it_should_handle_post_requests() {
+        let addr = ([127, 0, 0, 1], 9091).into();
+
+        let mut rt = Runtime::new().unwrap();
+
+        let buffer: &[u8] = br#"{"name": "Bumblebee"}"#;
+
+        thread::spawn(move || {
+            start_server(buffer, &addr);
+        });
+
+        let httper_client = HttperClient::<HttpsClient>::new();
+
+        let result = rt.block_on(httper_client.post(
+            &("http://".to_string() + &addr.to_string()),
+            hyper::Body::from(buffer),
+        ));
+
+        assert!(result.is_ok());
+        assert_eq!(hyper::StatusCode::OK, result.unwrap().status());
     }
 }
