@@ -125,6 +125,23 @@ where
         ))
     }
 
+    /// Performs a post request to a given url `&str` with
+    /// the provided payload `hyper::Body`.
+    ///
+    /// # Examples
+    /// ```
+    /// extern crate httper;
+    /// extern crate hyper;
+    ///
+    /// use httper::client::{HttperClient, HttpsClient};
+    ///
+    /// fn main() {
+    ///     let httper_client = HttperClient::<HttpsClient>::new();
+    ///
+    ///     httper_client.post("http://localhost:9090", hyper::Body::from("payload"));
+    /// }
+    /// ```
+    ///
     pub fn post<'a>(
         &'a self,
         url: &Url,
