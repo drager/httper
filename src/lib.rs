@@ -53,22 +53,45 @@ mod tests {
 
         let httper_client = HttperClient::<HttpsClient>::new();
 
-        //let a = httper_client.get(&("http://".to_string() + &addr.to_string())).json::<Data>();
-
         let data = Data {
             name: "Optimus Prime".to_string(),
         };
 
         let result = rt.block_on(
-            httper_client.get(&("http://".to_string() + &addr.to_string())).json::<Data>(),
+            httper_client
+                .get(&("http://".to_string() + &addr.to_string()))
+                .json::<Data>(),
         );
 
         assert_eq!(data, result.unwrap());
     }
 
     #[test]
-    fn it_should_handle_post_requests() {
+    fn it_should_handle_get_requests() {
+        use futures::Stream;
+
         let addr = ([127, 0, 0, 1], 9091).into();
+
+        let mut rt = Runtime::new().unwrap();
+
+        let buffer: &[u8] = br#"{"name": "Bumblebee"}"#;
+
+        thread::spawn(move || {
+            start_server(buffer, &addr);
+        });
+
+        let httper_client = HttperClient::<HttpsClient>::new();
+
+        let result = rt.block_on(httper_client.get(&("http://".to_string() + &addr.to_string())));
+
+        assert!(result.is_ok());
+        let body = result.unwrap().into_body().concat2();
+        assert_eq!(buffer, rt.block_on(body).unwrap().into_bytes());
+    }
+
+    #[test]
+    fn it_should_handle_post_requests() {
+        let addr = ([127, 0, 0, 1], 9092).into();
 
         let mut rt = Runtime::new().unwrap();
 

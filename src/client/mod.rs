@@ -1,3 +1,6 @@
+pub mod response_future;
+
+use self::response_future::ResponseFuture;
 use failure::Error;
 use futures::future;
 use hyper::{
@@ -56,27 +59,6 @@ pub struct HttperClient<C> {
     http_client: C,
 }
 
-pub struct ResponseFuture<'a>(
-    Box<Future<Item = hyper::Response<hyper::Body>, Error = Error> + 'a + Send>,
-);
-
-impl<'a> ResponseFuture<'a> {
-    pub fn json<T: 'a>(self) -> impl Future<Item = T, Error = Error> + Sized + 'a
-    where
-        T: DeserializeOwned + fmt::Debug,
-    {
-        self.0.and_then(|response| {
-            response
-                .into_body()
-                .map_err(Error::from)
-                .concat2()
-                .and_then(|body| {
-                    future::result(serde_json::from_slice::<T>(&body).map_err(Error::from))
-                })
-        })
-    }
-}
-
 impl<C> HttperClient<HttpClient<C>>
 where
     C: hyper::client::connect::Connect + 'static,
@@ -109,7 +91,7 @@ where
     /// httper_client.get("https://testing.local");
     /// ```
     ///
-    pub fn get<'a>(&'a self, url: Url) -> ResponseFuture {
+    pub fn get<'a>(self, url: Url) -> ResponseFuture {
         ResponseFuture(Box::new(
             future::result(self.parse_url(url))
                 .and_then(move |url| self.http_client.get(url).map_err(Error::from)),
