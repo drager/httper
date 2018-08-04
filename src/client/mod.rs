@@ -1,10 +1,8 @@
-pub mod response_future;
-
 use self::response_future::ResponseFuture;
 use failure::Error;
 use futures::future;
 use hyper::{
-    self, rt::{Future, Stream},
+    self, rt::Future,
 };
 use hyper_tls;
 use native_tls;
@@ -14,8 +12,10 @@ use std::default::Default;
 use std::error;
 use std::fmt;
 
+pub mod response_future;
+
 type HttpClient<C> = hyper::Client<C, hyper::Body>;
-type Url<'a> = &'a str;
+type Url = str;
 
 pub type HttpsClient = HttpClient<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>;
 
@@ -79,7 +79,7 @@ where
         }
     }
 
-    /// Perform a get request to a given url `&str`
+    /// Performs a get request to a given url `&str`
     ///
     /// # Examples
     ///
@@ -91,62 +91,16 @@ where
     /// httper_client.get("https://testing.local");
     /// ```
     ///
-    pub fn get<'a>(self, url: Url) -> ResponseFuture {
+    pub fn get<'a>(self, url: &Url) -> ResponseFuture<'a> {
         ResponseFuture(Box::new(
             future::result(self.parse_url(url))
                 .and_then(move |url| self.http_client.get(url).map_err(Error::from)),
         ))
     }
 
-    /// Perform a get request to a given url `&str` and deserialzie
-    /// the response json body into a `T`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// extern crate httper;
-    ///
-    /// #[macro_use]
-    /// extern crate serde_derive;
-    ///
-    /// use httper::client::{HttperClient, HttpsClient};
-    ///
-    /// fn main() {
-    ///
-    ///     #[derive(Debug, Deserialize)]
-    ///     struct Data {
-    ///         name: String,
-    ///     }
-    ///
-    ///     let httper_client = HttperClient::<HttpsClient>::new();
-    ///
-    ///     let data = Data {
-    ///         name: "Optimus Prime".to_string(),
-    ///     };
-    ///
-    ///     httper_client.get_json::<Data>("https://testing.local");
-    /// }
-    /// ```
-    ///
-    pub fn get_json<'a, T: 'a>(
-        &'a self,
-        url: Url,
-    ) -> impl Future<Item = T, Error = Error> + Sized + 'a
-    where
-        T: DeserializeOwned + fmt::Debug,
-    {
-        self.get(url).0.and_then(move |response| {
-            response
-                .into_body()
-                .map_err(Error::from)
-                .concat2()
-                .and_then(move |body| self.deserialize_data::<T>(&body))
-        })
-    }
-
     pub fn post<'a>(
         &'a self,
-        url: Url,
+        url: &Url,
         payload: hyper::Body,
     ) -> impl Future<Item = hyper::Response<hyper::Body>, Error = Error> + Sized + 'a {
         future::result(
