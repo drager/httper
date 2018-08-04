@@ -1,13 +1,7 @@
-use futures::Async;
 use futures::Future;
-use futures::Poll;
 
 #[derive(Debug)]
-pub struct Get<H, F>
-where
-    F: Future,
-{
-    pub httper: H,
+pub struct Get<F> {
     pub future: F,
 }
 

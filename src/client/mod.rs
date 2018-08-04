@@ -10,6 +10,7 @@ use serde_json;
 use std::default::Default;
 use std::error;
 use std::fmt;
+use std::marker::PhantomData;
 
 pub mod get;
 pub mod json;
@@ -22,18 +23,16 @@ type Url<'a> = &'a str;
 
 pub type HttpsClient = HttpClient<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>;
 
-pub trait Httper {
+pub trait Httper: Sized {
     type Item;
 
-    fn json(self) -> Json<Self>
-    where
-        Self: Sized;
+    fn json<T>(self) -> Json<Self::Item, T>;
 
-    fn get(self, url: Url) -> Get<Self, Self::Item>
-    where
-        <Self as Httper>::Item: Future,
-        Self: Sized;
+    fn get(self, url: Url) -> Get<Self::Item>;
 }
+
+// Blanket impl for all futures
+//impl<F: Future> Httper for F {}
 
 #[derive(Debug)]
 pub struct HttperClientBuilder<C> {
@@ -81,23 +80,26 @@ where
 {
     type Item = Box<Future<Item = hyper::Response<hyper::Body>, Error = Error>>;
 
-    fn json(self) -> Json<Self>
+    fn json<T>(self) -> Json<Self::Item, T>
     where
         Self: Sized,
     {
-        Json { httper: self }
+        let future_result = future::ok(hyper::Response::new(hyper::Body::from("test")));
+
+        Json {
+            future: Box::new(future_result),
+            _t: PhantomData,
+        }
     }
 
-    fn get(self, url: Url) -> Get<Self, Self::Item>
+    fn get(self, url: Url) -> Get<Self::Item>
     where
         Self: Sized,
     {
-        let httper = self.clone();
         let future_result = future::result(self.parse_url(url))
             .and_then(move |url| self.http_client.get(url).map_err(Error::from));
 
         Get {
-            httper: httper,
             future: Box::new(future_result),
         }
     }
