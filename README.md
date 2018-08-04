@@ -8,25 +8,31 @@ A simple usage example:
 
 ```rust
 extern crate httper;
-
+extern crate tokio;
 #[macro_use]
 extern crate serde_derive;
 
 use httper::client::{HttperClient, HttpsClient};
+use tokio::runtime::Runtime;
 
 fn main() {
-    #[derive(Debug, Deserialize)]
-    struct Data {
-        name: String,
-    }
+    let mut rt = Runtime::new().unwrap();
 
     let httper_client = HttperClient::<HttpsClient>::new();
 
-    let data = Data {
-        name: "Optimus Prime".to_string(),
-    };
+    #[derive(Debug, Deserialize, PartialEq)]
+    struct Contributor {
+        id: u32,
+        login: String,
+    }
 
-    httper_client.get_json::<Data>("https://testing.local");
+    let result = rt.block_on(
+        httper_client
+            .get("https://api.github.com/repos/drager/httper/contributors")
+            .json::<Vec<Contributor>>(),
+    );
+
+    println!("Contributors: {:?}", result);
 }
 ```
 
