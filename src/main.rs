@@ -9,7 +9,12 @@ fn main() {
 
     let httper_client = HttperClient::<HttpsClient>::new();
 
-    let result = httper_client.get("http://localhost:8000").json();
+    #[derive(Debug, Deserialize, PartialEq)]
+    struct Data {
+        name: String,
+    }
+
+    let result = httper_client.get("http://localhost:8000").json::<Data>();
     //println!("Result {:?}", result);
     let a = rt.block_on(result);
 }
