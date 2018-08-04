@@ -1,7 +1,10 @@
 extern crate httper;
 extern crate tokio;
 
-use httper::client::{Httper, HttperClient, HttpsClient};
+#[macro_use]
+extern crate serde_derive;
+
+use httper::client::{HttperClient, HttpsClient};
 use tokio::runtime::Runtime;
 
 fn main() {
@@ -14,7 +17,5 @@ fn main() {
         name: String,
     }
 
-    let result = httper_client.get("http://localhost:8000").json::<Data>();
-    //println!("Result {:?}", result);
-    let a = rt.block_on(result);
+    let result = rt.block_on(httper_client.get(&("http://localhost:6000")).json::<Data>());
 }

@@ -53,12 +53,14 @@ mod tests {
 
         let httper_client = HttperClient::<HttpsClient>::new();
 
+        //let a = httper_client.get(&("http://".to_string() + &addr.to_string())).json::<Data>();
+
         let data = Data {
             name: "Optimus Prime".to_string(),
         };
 
         let result = rt.block_on(
-            httper_client.get_json::<Data>(&("http://".to_string() + &addr.to_string())),
+            httper_client.get(&("http://".to_string() + &addr.to_string())).json::<Data>(),
         );
 
         assert_eq!(data, result.unwrap());

@@ -20,6 +20,7 @@ native-tls = "0.2.0"
 failure = "0.1.1"
 failure_derive = "0.1.1"
 tokio = "0.1.7"
+serde_derive = "1.0.70"
 
 [dev-dependencies]
 serde_derive = "1.0.70"

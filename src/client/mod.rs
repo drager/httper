@@ -10,34 +10,11 @@ use serde_json;
 use std::default::Default;
 use std::error;
 use std::fmt;
-use std::marker::PhantomData;
-
-pub mod get;
-pub mod json;
-
-use client::get::Get;
-use client::json::Json;
 
 type HttpClient<C> = hyper::Client<C, hyper::Body>;
 type Url<'a> = &'a str;
 
 pub type HttpsClient = HttpClient<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>;
-
-pub trait Httper: Sized {
-    fn json<T>(self) -> Json<Self, T> {
-        Json {
-            future: self,
-            _t: PhantomData,
-        }
-    }
-
-    fn get(self) -> Get<Self> {
-        Get { future: self }
-    }
-}
-
-// Blanket impl for all futures
-impl<F: Future> Httper for F {}
 
 #[derive(Debug)]
 pub struct HttperClientBuilder<C> {
@@ -79,27 +56,24 @@ pub struct HttperClient<C> {
     http_client: C,
 }
 
-impl<C> Httper for HttperClient<HttpClient<C>>
-where
-    C: hyper::client::connect::Connect + 'static,
-{
-    fn json<T>(self) -> Json<Self, T>
-    where
-        Self: Sized,
-    {
-        Json {
-            future: self,
-            _t: PhantomData,
-        }
-    }
+pub struct ResponseFuture<'a>(
+    Box<Future<Item = hyper::Response<hyper::Body>, Error = Error> + 'a + Send>,
+);
 
-    fn get(self) -> Get<Self>
+impl<'a> ResponseFuture<'a> {
+    pub fn json<T: 'a>(self) -> impl Future<Item = T, Error = Error> + Sized + 'a
     where
-        Self: Sized,
+        T: DeserializeOwned + fmt::Debug,
     {
-        Get {
-            future: self,
-        }
+        self.0.and_then(|response| {
+            response
+                .into_body()
+                .map_err(Error::from)
+                .concat2()
+                .and_then(|body| {
+                    future::result(serde_json::from_slice::<T>(&body).map_err(Error::from))
+                })
+        })
     }
 }
 
@@ -135,12 +109,11 @@ where
     /// httper_client.get("https://testing.local");
     /// ```
     ///
-    pub fn get<'a>(
-        &'a self,
-        url: Url,
-    ) -> impl Future<Item = hyper::Response<hyper::Body>, Error = Error> + Sized + 'a {
-        future::result(self.parse_url(url))
-            .and_then(move |url| self.http_client.get(url).map_err(Error::from))
+    pub fn get<'a>(&'a self, url: Url) -> ResponseFuture {
+        ResponseFuture(Box::new(
+            future::result(self.parse_url(url))
+                .and_then(move |url| self.http_client.get(url).map_err(Error::from)),
+        ))
     }
 
     /// Perform a get request to a given url `&str` and deserialzie
@@ -180,7 +153,7 @@ where
     where
         T: DeserializeOwned + fmt::Debug,
     {
-        self.get(url).and_then(move |response| {
+        self.get(url).0.and_then(move |response| {
             response
                 .into_body()
                 .map_err(Error::from)
