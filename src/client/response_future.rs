@@ -24,6 +24,36 @@ impl<'a> Future for ResponseFuture<'a> {
 }
 
 impl<'a> ResponseFuture<'a> {
+    /// Deserialize the response json body into a `T`.
+    /// Returns a Future containing the deserialized body.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// extern crate httper;
+    ///
+    /// #[macro_use]
+    /// extern crate serde_derive;
+    ///
+    /// use httper::client::{HttperClient, HttpsClient};
+    ///
+    /// fn main() {
+    ///
+    ///     #[derive(Debug, Deserialize)]
+    ///     struct Data {
+    ///         name: String,
+    ///     }
+    ///
+    ///     let httper_client = HttperClient::<HttpsClient>::new();
+    ///
+    ///     let data = Data {
+    ///         name: "Optimus Prime".to_string(),
+    ///     };
+    ///
+    ///     httper_client.get("https://testing.local").json::<Data>();
+    /// }
+    /// ```
+    ///
     pub fn json<T: 'a>(self) -> impl Future<Item = T, Error = Error> + Sized + 'a
     where
         T: DeserializeOwned + fmt::Debug,
