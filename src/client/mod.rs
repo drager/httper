@@ -11,10 +11,29 @@ use std::default::Default;
 use std::error;
 use std::fmt;
 
+pub mod get;
+pub mod json;
+
+use client::get::Get;
+use client::json::Json;
+
 type HttpClient<C> = hyper::Client<C, hyper::Body>;
 type Url<'a> = &'a str;
 
 pub type HttpsClient = HttpClient<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>;
+
+pub trait Httper {
+    type Item;
+
+    fn json(self) -> Json<Self>
+    where
+        Self: Sized;
+
+    fn get(self, url: Url) -> Get<Self, Self::Item>
+    where
+        <Self as Httper>::Item: Future,
+        Self: Sized;
+}
 
 #[derive(Debug)]
 pub struct HttperClientBuilder<C> {
@@ -54,6 +73,34 @@ impl<C> HttperClientBuilder<C> {
 #[derive(Debug, Clone)]
 pub struct HttperClient<C> {
     http_client: C,
+}
+
+impl<C> Httper for HttperClient<HttpClient<C>>
+where
+    C: hyper::client::connect::Connect + 'static,
+{
+    type Item = Box<Future<Item = hyper::Response<hyper::Body>, Error = Error>>;
+
+    fn json(self) -> Json<Self>
+    where
+        Self: Sized,
+    {
+        Json { httper: self }
+    }
+
+    fn get(self, url: Url) -> Get<Self, Self::Item>
+    where
+        Self: Sized,
+    {
+        let httper = self.clone();
+        let future_result = future::result(self.parse_url(url))
+            .and_then(move |url| self.http_client.get(url).map_err(Error::from));
+
+        Get {
+            httper: httper,
+            future: Box::new(future_result),
+        }
+    }
 }
 
 impl<C> HttperClient<HttpClient<C>>
