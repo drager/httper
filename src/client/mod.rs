@@ -31,7 +31,7 @@ pub trait Httper: Sized {
         }
     }
 
-    fn get(self, url: Url) -> Get<Self> {
+    fn get(self) -> Get<Self> {
         Get { future: self }
     }
 }
@@ -87,23 +87,18 @@ where
     where
         Self: Sized,
     {
-        let future_result = future::ok(hyper::Response::new(hyper::Body::from("test")));
-
         Json {
-            future: future_result,
+            future: self,
             _t: PhantomData,
         }
     }
 
-    fn get(self, url: Url) -> Get<Self>
+    fn get(self) -> Get<Self>
     where
         Self: Sized,
     {
-        let future_result = future::result(self.parse_url(url))
-            .and_then(move |url| self.http_client.get(url).map_err(Error::from));
-
         Get {
-            future: future_result,
+            future: self,
         }
     }
 }
