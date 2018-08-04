@@ -24,15 +24,20 @@ type Url<'a> = &'a str;
 pub type HttpsClient = HttpClient<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>;
 
 pub trait Httper: Sized {
-    type Item;
+    fn json<T>(self) -> Json<Self, T> {
+        Json {
+            future: self,
+            _t: PhantomData,
+        }
+    }
 
-    fn json<T>(self) -> Json<Self::Item, T>;
-
-    fn get(self, url: Url) -> Get<Self::Item>;
+    fn get(self, url: Url) -> Get<Self> {
+        Get { future: self }
+    }
 }
 
 // Blanket impl for all futures
-//impl<F: Future> Httper for F {}
+impl<F: Future> Httper for F {}
 
 #[derive(Debug)]
 pub struct HttperClientBuilder<C> {
@@ -78,21 +83,19 @@ impl<C> Httper for HttperClient<HttpClient<C>>
 where
     C: hyper::client::connect::Connect + 'static,
 {
-    type Item = Box<Future<Item = hyper::Response<hyper::Body>, Error = Error>>;
-
-    fn json<T>(self) -> Json<Self::Item, T>
+    fn json<T>(self) -> Json<Self, T>
     where
         Self: Sized,
     {
         let future_result = future::ok(hyper::Response::new(hyper::Body::from("test")));
 
         Json {
-            future: Box::new(future_result),
+            future: future_result,
             _t: PhantomData,
         }
     }
 
-    fn get(self, url: Url) -> Get<Self::Item>
+    fn get(self, url: Url) -> Get<Self>
     where
         Self: Sized,
     {
@@ -100,7 +103,7 @@ where
             .and_then(move |url| self.http_client.get(url).map_err(Error::from));
 
         Get {
-            future: Box::new(future_result),
+            future: future_result,
         }
     }
 }
