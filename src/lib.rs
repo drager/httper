@@ -6,6 +6,7 @@ extern crate native_tls;
 extern crate serde;
 extern crate serde_json;
 extern crate tokio;
+extern crate http;
 
 #[cfg(test)]
 #[macro_use]

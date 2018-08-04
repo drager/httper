@@ -1,11 +1,11 @@
 use self::response_future::ResponseFuture;
 use failure::Error;
 use futures::future;
-use hyper::{
-    self, rt::Future,
-};
+use http;
+use hyper::{self, rt::Future};
 use hyper_tls;
 use native_tls;
+use std::collections::HashMap;
 use std::default::Default;
 use std::error;
 
@@ -16,9 +16,13 @@ type Url = str;
 
 pub type HttpsClient = HttpClient<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>;
 
+const PKG_VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
+const PKG_NAME: Option<&'static str> = option_env!("CARGO_PKG_NAME");
+
 #[derive(Debug)]
 pub struct HttperClientBuilder<C> {
     http_client: C,
+    headers: HashMap<hyper::header::HeaderName, String>,
 }
 
 impl Default for HttperClient<HttpsClient> {
@@ -28,13 +32,30 @@ impl Default for HttperClient<HttpsClient> {
             _,
         > = build_https_client().expect("Failed to build HTTPs client");
 
-        HttperClient { http_client }
+        let mut headers = HashMap::new();
+
+        headers.insert(
+            hyper::header::USER_AGENT,
+            format!(
+                "{}/{}",
+                PKG_NAME.unwrap_or("unknown_name"),
+                PKG_VERSION.unwrap_or("unknown_version"),
+            ),
+        );
+
+        HttperClient {
+            http_client,
+            headers,
+        }
     }
 }
 
 impl<C> HttperClientBuilder<C> {
     pub fn new(c: C) -> Self {
-        HttperClientBuilder { http_client: c }
+        HttperClientBuilder {
+            http_client: c,
+            headers: HashMap::new(),
+        }
     }
 
     pub fn http_client(self, http_client: C) -> Self {
@@ -47,6 +68,7 @@ impl<C> HttperClientBuilder<C> {
     pub fn build(self) -> HttperClient<C> {
         HttperClient {
             http_client: self.http_client,
+            headers: self.headers,
         }
     }
 }
@@ -54,6 +76,7 @@ impl<C> HttperClientBuilder<C> {
 #[derive(Debug, Clone)]
 pub struct HttperClient<C> {
     http_client: C,
+    headers: HashMap<hyper::header::HeaderName, String>,
 }
 
 impl<C> HttperClient<HttpClient<C>>
@@ -89,9 +112,16 @@ where
     /// ```
     ///
     pub fn get<'a>(self, url: &Url) -> ResponseFuture<'a> {
+        let mut request = self.request_with_default_headers();
+
         ResponseFuture(Box::new(
-            future::result(self.parse_url(url))
-                .and_then(move |url| self.http_client.get(url).map_err(Error::from)),
+            future::result(self.parse_url(url).and_then(|url| {
+                request
+                    .method(hyper::Method::GET)
+                    .uri(url)
+                    .body(hyper::Body::empty())
+                    .map_err(Error::from)
+            })).and_then(move |request| self.http_client.request(request).map_err(Error::from)),
         ))
     }
 
@@ -100,10 +130,25 @@ where
         url: &Url,
         payload: hyper::Body,
     ) -> impl Future<Item = hyper::Response<hyper::Body>, Error = Error> + Sized + 'a {
-        future::result(
-            self.parse_url(url)
-                .and_then(|url| hyper::Request::post(url).body(payload).map_err(Error::from)),
-        ).and_then(move |request| self.http_client.request(request).map_err(Error::from))
+        let mut request = self.request_with_default_headers();
+
+        future::result(self.parse_url(url).and_then(|url| {
+            request
+                .method(hyper::Method::POST)
+                .uri(url)
+                .body(payload)
+                .map_err(Error::from)
+        })).and_then(move |request| self.http_client.request(request).map_err(Error::from))
+    }
+
+    fn request_with_default_headers(&self) -> http::request::Builder {
+        let mut request = hyper::Request::builder();
+
+        self.headers.iter().for_each(|(k, v)| {
+            request.header(k.as_str(), v.as_str());
+        });
+
+        request
     }
 
     /// Parses the url `&str` to a `hyper::Uri`.
