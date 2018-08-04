@@ -6,11 +6,8 @@ use hyper::{
 };
 use hyper_tls;
 use native_tls;
-use serde::de::DeserializeOwned;
-use serde_json;
 use std::default::Default;
 use std::error;
-use std::fmt;
 
 pub mod response_future;
 
@@ -116,21 +113,6 @@ where
     ///
     fn parse_url(&self, url: &str) -> Result<hyper::Uri, Error> {
         url.parse::<hyper::Uri>().map_err(Error::from)
-    }
-
-    /// Deserializes the body `hyper::Chunk` to a `T`.
-    ///
-    /// # Errors
-    /// Will return Err if the body couldn't be deserialzied into a `T`.
-    ///
-    fn deserialize_data<T>(
-        &self,
-        body: &hyper::Chunk,
-    ) -> impl Future<Item = T, Error = Error> + Sized
-    where
-        T: DeserializeOwned + fmt::Debug,
-    {
-        future::result(serde_json::from_slice::<T>(&body).map_err(Error::from))
     }
 }
 

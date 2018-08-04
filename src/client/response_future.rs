@@ -27,6 +27,9 @@ impl<'a> ResponseFuture<'a> {
     /// Deserialize the response json body into a `T`.
     /// Returns a Future containing the deserialized body.
     ///
+    /// # Errors
+    /// Will return Err if the body couldn't be deserialzied into a `T`.
+    ///
     /// # Examples
     ///
     /// ```
