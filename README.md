@@ -1,4 +1,5 @@
 # HTTPer
+[![Build Status](https://travis-ci.org/drager/httper.svg?branch=master)](https://travis-ci.org/drager/httper)
 
 HTTP(S) client built on top of [hyper](https://github.com/hyperium/hyper/).
 
