@@ -111,8 +111,9 @@ where
     /// httper_client.get("https://testing.local");
     /// ```
     ///
-    pub fn get<'a>(self, url: &Url) -> ResponseFuture<'a> {
+    pub fn get(&self, url: &Url) -> ResponseFuture {
         let mut request = self.request_with_default_headers();
+        let http_client = self.http_client.clone();
 
         ResponseFuture(Box::new(
             future::result(self.parse_url(url).and_then(|url| {
@@ -121,7 +122,7 @@ where
                     .uri(url)
                     .body(hyper::Body::empty())
                     .map_err(Error::from)
-            })).and_then(move |request| self.http_client.request(request).map_err(Error::from)),
+            })).and_then(move |request| http_client.request(request).map_err(Error::from)),
         ))
     }
 
@@ -142,12 +143,13 @@ where
     /// }
     /// ```
     ///
-    pub fn post<'a>(
-        &'a self,
+    pub fn post(
+        &self,
         url: &Url,
         payload: hyper::Body,
-    ) -> impl Future<Item = hyper::Response<hyper::Body>, Error = Error> + Sized + 'a {
+    ) -> impl Future<Item = hyper::Response<hyper::Body>, Error = Error> + Sized {
         let mut request = self.request_with_default_headers();
+        let http_client = self.http_client.clone();
 
         future::result(self.parse_url(url).and_then(|url| {
             request
@@ -155,7 +157,7 @@ where
                 .uri(url)
                 .body(payload)
                 .map_err(Error::from)
-        })).and_then(move |request| self.http_client.request(request).map_err(Error::from))
+        })).and_then(move |request| http_client.request(request).map_err(Error::from))
     }
 
     fn request_with_default_headers(&self) -> http::request::Builder {

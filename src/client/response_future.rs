@@ -5,11 +5,11 @@ use serde::de::DeserializeOwned;
 use serde_json;
 use std::fmt;
 
-pub struct ResponseFuture<'a>(
-    pub Box<Future<Item = hyper::Response<hyper::Body>, Error = Error> + 'a + Send>,
+pub struct ResponseFuture(
+    pub Box<Future<Item = hyper::Response<hyper::Body>, Error = Error> + Send>,
 );
 
-impl<'a> Future for ResponseFuture<'a> {
+impl Future for ResponseFuture {
     type Item = hyper::Response<hyper::Body>;
     type Error = Error;
 
@@ -23,7 +23,7 @@ impl<'a> Future for ResponseFuture<'a> {
     }
 }
 
-impl<'a> ResponseFuture<'a> {
+impl ResponseFuture {
     /// Deserialize the response json body into a `T`.
     /// Returns a Future containing the deserialized body.
     ///
@@ -57,7 +57,7 @@ impl<'a> ResponseFuture<'a> {
     /// }
     /// ```
     ///
-    pub fn json<T: 'a>(self) -> impl Future<Item = T, Error = Error> + Sized + 'a
+    pub fn json<T>(self) -> impl Future<Item = T, Error = Error> + Sized
     where
         T: DeserializeOwned + fmt::Debug,
     {
