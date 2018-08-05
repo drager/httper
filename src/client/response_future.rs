@@ -28,7 +28,7 @@ impl ResponseFuture {
     /// Returns a Future containing the deserialized body.
     ///
     /// # Errors
-    /// Will return Err if the body couldn't be deserialzied into a `T`.
+    /// Will return Err if the body couldn't be deserialized into a `T`.
     ///
     /// # Examples
     ///
