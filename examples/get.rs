@@ -1,6 +1,4 @@
-extern crate futures;
 extern crate httper;
-extern crate hyper;
 extern crate tokio;
 
 use httper::client::{HttperClient, HttpsClient};
