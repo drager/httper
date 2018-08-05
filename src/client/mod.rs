@@ -116,20 +116,15 @@ where
     }
 
     /// Performs a post request to a given url `&str` with
-    /// the provided payload `hyper::Body`.
+    /// the provided payload that can be turned into a `hyper::Body`.
     ///
     /// # Examples
     /// ```
-    /// extern crate httper;
-    /// extern crate hyper;
-    ///
     /// use httper::client::{HttperClient, HttpsClient};
     ///
-    /// fn main() {
-    ///     let httper_client = HttperClient::<HttpsClient>::new();
+    /// let httper_client = HttperClient::<HttpsClient>::new();
     ///
-    ///     httper_client.post("http://localhost:9090", hyper::Body::from("payload"));
-    /// }
+    /// httper_client.post("http://localhost:9090", "payload");
     /// ```
     ///
     pub fn post<P: Into<hyper::Body> + Send>(&self, url: &Url, payload: P) -> ResponseFuture
@@ -137,6 +132,25 @@ where
         hyper::Body: From<P>,
     {
         self.request(url, hyper::Method::POST, payload)
+    }
+
+    /// Performs a put request to a given url `&str` with
+    /// the provided payload that can be turned into a `hyper::Body`.
+    ///
+    /// # Examples
+    /// ```
+    /// use httper::client::{HttperClient, HttpsClient};
+    ///
+    /// let httper_client = HttperClient::<HttpsClient>::new();
+    ///
+    /// httper_client.put("http://localhost:9090", "payload");
+    /// ```
+    ///
+    pub fn put<P: Into<hyper::Body> + Send>(&self, url: &Url, payload: P) -> ResponseFuture
+    where
+        hyper::Body: From<P>,
+    {
+        self.request(url, hyper::Method::PUT, payload)
     }
 
     fn request<B: Into<hyper::Body> + Send>(

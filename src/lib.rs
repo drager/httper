@@ -138,4 +138,52 @@ mod tests {
         assert_eq!(data, result.unwrap());
     }
 
+    #[test]
+    fn it_should_handle_put_requests() {
+        let addr = ([127, 0, 0, 1], 9094).into();
+
+        let mut rt = Runtime::new().unwrap();
+
+        let buffer: &[u8] = br#"{"name": "Bumblebee"}"#;
+
+        thread::spawn(move || {
+            start_server(buffer, &addr);
+        });
+
+        let httper_client = HttperClient::<HttpsClient>::new();
+
+        let result =
+            rt.block_on(httper_client.put(&("http://".to_string() + &addr.to_string()), buffer));
+
+        assert!(result.is_ok());
+        assert_eq!(hyper::StatusCode::OK, result.unwrap().status());
+    }
+
+    #[test]
+    fn it_should_be_able_to_be_chained_into_json_for_put() {
+        let addr = ([127, 0, 0, 1], 9095).into();
+
+        let mut rt = Runtime::new().unwrap();
+
+        let buffer: &[u8] = br#"{"name": "Optimus Prime"}"#;
+
+        thread::spawn(move || {
+            start_server(buffer, &addr);
+        });
+
+        let httper_client = HttperClient::<HttpsClient>::new();
+
+        let data = Data {
+            name: "Optimus Prime".to_string(),
+        };
+
+        let result = rt.block_on(
+            httper_client
+                .put(&("http://".to_string() + &addr.to_string()), buffer)
+                .json::<Data>(),
+        );
+
+        assert_eq!(data, result.unwrap());
+    }
+
 }
