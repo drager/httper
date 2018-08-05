@@ -112,18 +112,7 @@ where
     /// ```
     ///
     pub fn get(&self, url: &Url) -> ResponseFuture {
-        let mut request = self.request_with_default_headers();
-        let http_client = self.http_client.clone();
-
-        ResponseFuture(Box::new(
-            future::result(self.parse_url(url).and_then(|url| {
-                request
-                    .method(hyper::Method::GET)
-                    .uri(url)
-                    .body(hyper::Body::empty())
-                    .map_err(Error::from)
-            })).and_then(move |request| http_client.request(request).map_err(Error::from)),
-        ))
+        self.request(url, hyper::Method::GET, hyper::Body::empty())
     }
 
     /// Performs a post request to a given url `&str` with
@@ -147,15 +136,27 @@ where
     where
         hyper::Body: From<P>,
     {
+        self.request(url, hyper::Method::POST, payload)
+    }
+
+    fn request<B: Into<hyper::Body> + Send>(
+        &self,
+        url: &Url,
+        method: hyper::Method,
+        body: B,
+    ) -> ResponseFuture
+    where
+        hyper::Body: From<B>,
+    {
         let mut request = self.request_with_default_headers();
         let http_client = self.http_client.clone();
 
         ResponseFuture(Box::new(
             future::result(self.parse_url(url).and_then(|url| {
                 request
-                    .method(hyper::Method::POST)
+                    .method(method)
                     .uri(url)
-                    .body(hyper::Body::from(payload))
+                    .body(hyper::Body::from(body))
                     .map_err(Error::from)
             })).and_then(move |request| http_client.request(request).map_err(Error::from)),
         ))
