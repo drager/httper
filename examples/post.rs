@@ -5,7 +5,6 @@ extern crate tokio;
 use httper::client::{HttperClient, HttpsClient};
 use hyper::rt::Future;
 use std::net::SocketAddr;
-use std::str;
 use std::thread;
 use tokio::runtime::Runtime;
 
