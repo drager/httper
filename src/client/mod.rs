@@ -143,21 +143,19 @@ where
     /// }
     /// ```
     ///
-    pub fn post(
-        &self,
-        url: &Url,
-        payload: hyper::Body,
-    ) -> impl Future<Item = hyper::Response<hyper::Body>, Error = Error> + Sized {
+    pub fn post(&self, url: &Url, payload: hyper::Body) -> ResponseFuture {
         let mut request = self.request_with_default_headers();
         let http_client = self.http_client.clone();
 
-        future::result(self.parse_url(url).and_then(|url| {
-            request
-                .method(hyper::Method::POST)
-                .uri(url)
-                .body(payload)
-                .map_err(Error::from)
-        })).and_then(move |request| http_client.request(request).map_err(Error::from))
+        ResponseFuture(Box::new(
+            future::result(self.parse_url(url).and_then(|url| {
+                request
+                    .method(hyper::Method::POST)
+                    .uri(url)
+                    .body(payload)
+                    .map_err(Error::from)
+            })).and_then(move |request| http_client.request(request).map_err(Error::from)),
+        ))
     }
 
     fn request_with_default_headers(&self) -> http::request::Builder {
