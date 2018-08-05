@@ -104,10 +104,8 @@ mod tests {
 
         let httper_client = HttperClient::<HttpsClient>::new();
 
-        let result = rt.block_on(httper_client.post(
-            &("http://".to_string() + &addr.to_string()),
-            hyper::Body::from(buffer),
-        ));
+        let result =
+            rt.block_on(httper_client.post(&("http://".to_string() + &addr.to_string()), buffer));
 
         assert!(result.is_ok());
         assert_eq!(hyper::StatusCode::OK, result.unwrap().status());
@@ -133,10 +131,7 @@ mod tests {
 
         let result = rt.block_on(
             httper_client
-                .post(
-                    &("http://".to_string() + &addr.to_string()),
-                    hyper::Body::from(buffer),
-                )
+                .post(&("http://".to_string() + &addr.to_string()), buffer)
                 .json::<Data>(),
         );
 

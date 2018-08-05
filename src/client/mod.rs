@@ -143,7 +143,10 @@ where
     /// }
     /// ```
     ///
-    pub fn post(&self, url: &Url, payload: hyper::Body) -> ResponseFuture {
+    pub fn post<P: Into<hyper::Body> + Send>(&self, url: &Url, payload: P) -> ResponseFuture
+    where
+        hyper::Body: From<P>,
+    {
         let mut request = self.request_with_default_headers();
         let http_client = self.http_client.clone();
 
@@ -152,7 +155,7 @@ where
                 request
                     .method(hyper::Method::POST)
                     .uri(url)
-                    .body(payload)
+                    .body(hyper::Body::from(payload))
                     .map_err(Error::from)
             })).and_then(move |request| http_client.request(request).map_err(Error::from)),
         ))

@@ -3,9 +3,9 @@ extern crate hyper;
 extern crate tokio;
 
 use httper::client::{HttperClient, HttpsClient};
-use hyper::rt::Future;
 use std::net::SocketAddr;
 use std::thread;
+use tokio::prelude::future::Future;
 use tokio::runtime::Runtime;
 
 /// Spins up a server using hyper.
@@ -36,10 +36,8 @@ fn main() {
 
     let httper_client: HttperClient<HttpsClient> = HttperClient::<HttpsClient>::new();
 
-    let result = rt.block_on(httper_client.post(
-        &("http://".to_string() + &addr.to_string()),
-        hyper::Body::from(buffer),
-    ));
+    let result =
+        rt.block_on(httper_client.post(&("http://".to_string() + &addr.to_string()), buffer));
 
     println!("Result: {:?}", result);
 

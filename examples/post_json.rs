@@ -5,9 +5,9 @@ extern crate tokio;
 extern crate serde_derive;
 
 use httper::client::{HttperClient, HttpsClient};
-use hyper::rt::Future;
 use std::net::SocketAddr;
 use std::thread;
+use tokio::prelude::future::Future;
 use tokio::runtime::Runtime;
 
 /// Spins up a server using hyper.
@@ -45,10 +45,7 @@ fn main() {
 
     let result = rt.block_on(
         httper_client
-            .post(
-                &("http://".to_string() + &addr.to_string()),
-                hyper::Body::from(buffer),
-            )
+            .post(&("http://".to_string() + &addr.to_string()), buffer)
             .json::<Transformer>(),
     );
 
