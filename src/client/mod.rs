@@ -153,6 +153,25 @@ where
         self.request(url, hyper::Method::PUT, payload)
     }
 
+    /// Performs a patch request to a given url `&str` with
+    /// the provided payload that can be turned into a `hyper::Body`.
+    ///
+    /// # Examples
+    /// ```
+    /// use httper::client::{HttperClient, HttpsClient};
+    ///
+    /// let httper_client = HttperClient::<HttpsClient>::new();
+    ///
+    /// httper_client.patch("http://localhost:9090", "payload");
+    /// ```
+    ///
+    pub fn patch<P: Into<hyper::Body> + Send>(&self, url: &Url, payload: P) -> ResponseFuture
+    where
+        hyper::Body: From<P>,
+    {
+        self.request(url, hyper::Method::PATCH, payload)
+    }
+
     fn request<B: Into<hyper::Body> + Send>(
         &self,
         url: &Url,
