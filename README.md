@@ -1,7 +1,14 @@
 # HTTPer
 [![Build Status](https://travis-ci.org/drager/httper.svg?branch=master)](https://travis-ci.org/drager/httper)
 
-HTTP(S) client built on top of [hyper](https://github.com/hyperium/hyper/).
+A asynchronous HTTP(S) client built on top of [hyper](https://github.com/hyperium/hyper/).
+
+## Why
+At the time when I started writting parts of this client
+I couldn't find any higher level asynchronous http(s) client. I also tended to
+write the same code over and over again for serveral different projects
+based on hyper, always wanted to be able to make requests to https addresses
+and deserialize the response body into json.
 
 ## Usage
 
