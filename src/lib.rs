@@ -21,6 +21,7 @@ mod tests {
     use std::net::SocketAddr;
     use std::str;
     use std::thread;
+    use std::time::Duration;
     use tokio::runtime::current_thread::Runtime;
 
     fn start_server(body: &'static [u8], addr: &SocketAddr) {
@@ -32,7 +33,12 @@ mod tests {
             .serve(new_svc)
             .map_err(|e| eprintln!("server error: {}", e));
 
+        thread::spawn(|| {
         hyper::rt::run(server);
+        });
+
+        // Wait for server to start.
+        thread::sleep(Duration::from_secs(5));
     }
 
     #[derive(Debug, Deserialize, PartialEq)]
@@ -50,9 +56,8 @@ mod tests {
 
         let buffer: &[u8] = br#"{"name": "Bumblebee"}"#;
 
-        thread::spawn(move || {
-            start_server(buffer, &addr);
-        });
+        // Spin up a temporary server.
+        start_server(buffer, &addr);
 
         let httper_client = HttperClient::<HttpsClient>::new();
 
@@ -71,9 +76,8 @@ mod tests {
 
         let buffer: &[u8] = br#"{"name": "Optimus Prime"}"#;
 
-        thread::spawn(move || {
-            start_server(buffer, &addr);
-        });
+        // Spin up a temporary server.
+        start_server(buffer, &addr);
 
         let httper_client = HttperClient::<HttpsClient>::new();
 
@@ -98,9 +102,8 @@ mod tests {
 
         let buffer: &[u8] = br#"{"name": "Bumblebee"}"#;
 
-        thread::spawn(move || {
-            start_server(buffer, &addr);
-        });
+        // Spin up a temporary server.
+        start_server(buffer, &addr);
 
         let httper_client = HttperClient::<HttpsClient>::new();
 
@@ -119,9 +122,8 @@ mod tests {
 
         let buffer: &[u8] = br#"{"name": "Optimus Prime"}"#;
 
-        thread::spawn(move || {
-            start_server(buffer, &addr);
-        });
+        // Spin up a temporary server.
+        start_server(buffer, &addr);
 
         let httper_client = HttperClient::<HttpsClient>::new();
 
@@ -146,9 +148,8 @@ mod tests {
 
         let buffer: &[u8] = br#"{"name": "Bumblebee"}"#;
 
-        thread::spawn(move || {
-            start_server(buffer, &addr);
-        });
+        // Spin up a temporary server.
+        start_server(buffer, &addr);
 
         let httper_client = HttperClient::<HttpsClient>::new();
 
@@ -167,9 +168,8 @@ mod tests {
 
         let buffer: &[u8] = br#"{"name": "Optimus Prime"}"#;
 
-        thread::spawn(move || {
-            start_server(buffer, &addr);
-        });
+        // Spin up a temporary server.
+        start_server(buffer, &addr);
 
         let httper_client = HttperClient::<HttpsClient>::new();
 
@@ -185,5 +185,4 @@ mod tests {
 
         assert_eq!(data, result.unwrap());
     }
-
 }
