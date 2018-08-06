@@ -1,3 +1,9 @@
+//! # HTTPer
+//! A asynchronous HTTP(S) client built on top of [hyper](https://github.com/hyperium/hyper/).
+//!
+//! Checkout the [examples](https://github.com/drager/httper/tree/master/examples) for usage.
+//!
+
 extern crate failure;
 extern crate futures;
 extern crate http;
