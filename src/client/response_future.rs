@@ -47,7 +47,7 @@ impl ResponseFuture {
     ///         name: String,
     ///     }
     ///
-    ///     let httper_client = HttperClient::<HttpsClient>::new();
+    ///     let httper_client = HttperClient::new();
     ///
     ///     let data = Data {
     ///         name: "Optimus Prime".to_string(),

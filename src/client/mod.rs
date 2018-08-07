@@ -19,13 +19,7 @@ pub type HttpsClient = HttpClient<hyper_tls::HttpsConnector<hyper::client::HttpC
 const PKG_VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 const PKG_NAME: Option<&'static str> = option_env!("CARGO_PKG_NAME");
 
-#[derive(Debug)]
-pub struct HttperClientBuilder<C> {
-    http_client: C,
-    headers: HashMap<hyper::header::HeaderName, String>,
-}
-
-impl Default for HttperClient<HttpsClient> {
+impl Default for HttperClient {
     fn default() -> Self {
         let http_client: hyper::Client<
             hyper_tls::HttpsConnector<hyper::client::HttpConnector>,
@@ -50,50 +44,25 @@ impl Default for HttperClient<HttpsClient> {
     }
 }
 
-impl<C> HttperClientBuilder<C> {
-    pub fn new(c: C) -> Self {
-        HttperClientBuilder {
-            http_client: c,
-            headers: HashMap::new(),
-        }
-    }
-
-    pub fn http_client(self, http_client: C) -> Self {
-        HttperClientBuilder {
-            http_client,
-            ..self
-        }
-    }
-
-    pub fn build(self) -> HttperClient<C> {
-        HttperClient {
-            http_client: self.http_client,
-            headers: self.headers,
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
-pub struct HttperClient<C> {
-    http_client: C,
+pub struct HttperClient {
+    http_client: HttpsClient,
     headers: HashMap<hyper::header::HeaderName, String>,
 }
 
-impl<C> HttperClient<HttpClient<C>>
-where
-    C: hyper::client::connect::Connect + 'static,
+impl HttperClient
 {
     /// Creates a new `HttperClient`.
     ///
     /// # Examples
     ///
     /// ```
-    /// use httper::client::{HttperClient, HttpsClient};
+    /// use httper::client::HttperClient;
     ///
-    /// let httper_client = HttperClient::<HttpsClient>::new();
+    /// let httper_client = HttperClient::new();
     /// ```
     ///
-    pub fn new() -> HttperClient<HttpsClient> {
+    pub fn new() -> HttperClient {
         HttperClient {
             ..HttperClient::default()
         }
@@ -104,9 +73,9 @@ where
     /// # Examples
     ///
     /// ```
-    /// use httper::client::{HttperClient, HttpsClient};
+    /// use httper::client::HttperClient;
     ///
-    /// let httper_client = HttperClient::<HttpsClient>::new();
+    /// let httper_client = HttperClient::new();
     ///
     /// httper_client.get("https://testing.local");
     /// ```
@@ -120,9 +89,9 @@ where
     ///
     /// # Examples
     /// ```
-    /// use httper::client::{HttperClient, HttpsClient};
+    /// use httper::client::HttperClient;
     ///
-    /// let httper_client = HttperClient::<HttpsClient>::new();
+    /// let httper_client = HttperClient::new();
     ///
     /// httper_client.post("http://localhost:9090", "payload");
     /// ```
@@ -139,9 +108,9 @@ where
     ///
     /// # Examples
     /// ```
-    /// use httper::client::{HttperClient, HttpsClient};
+    /// use httper::client::HttperClient;
     ///
-    /// let httper_client = HttperClient::<HttpsClient>::new();
+    /// let httper_client = HttperClient::new();
     ///
     /// httper_client.put("http://localhost:9090", "payload");
     /// ```
@@ -158,9 +127,9 @@ where
     ///
     /// # Examples
     /// ```
-    /// use httper::client::{HttperClient, HttpsClient};
+    /// use httper::client::HttperClient;
     ///
-    /// let httper_client = HttperClient::<HttpsClient>::new();
+    /// let httper_client = HttperClient::new();
     ///
     /// httper_client.patch("http://localhost:9090", "payload");
     /// ```

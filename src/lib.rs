@@ -22,7 +22,7 @@ pub mod client;
 
 #[cfg(test)]
 mod tests {
-    use super::client::{HttperClient, HttpsClient};
+    use super::client::HttperClient;
     use hyper::{self, rt::Future};
     use std::net::SocketAddr;
     use std::str;
@@ -65,7 +65,7 @@ mod tests {
         // Spin up a temporary server.
         start_server(buffer, &addr);
 
-        let httper_client = HttperClient::<HttpsClient>::new();
+        let httper_client = HttperClient::new();
 
         let result = rt.block_on(httper_client.get(&("http://".to_string() + &addr.to_string())));
 
@@ -85,7 +85,7 @@ mod tests {
         // Spin up a temporary server.
         start_server(buffer, &addr);
 
-        let httper_client = HttperClient::<HttpsClient>::new();
+        let httper_client = HttperClient::new();
 
         let data = Data {
             name: "Optimus Prime".to_string(),
@@ -111,7 +111,7 @@ mod tests {
         // Spin up a temporary server.
         start_server(buffer, &addr);
 
-        let httper_client = HttperClient::<HttpsClient>::new();
+        let httper_client = HttperClient::new();
 
         let result =
             rt.block_on(httper_client.post(&("http://".to_string() + &addr.to_string()), buffer));
@@ -131,7 +131,7 @@ mod tests {
         // Spin up a temporary server.
         start_server(buffer, &addr);
 
-        let httper_client = HttperClient::<HttpsClient>::new();
+        let httper_client = HttperClient::new();
 
         let data = Data {
             name: "Optimus Prime".to_string(),
@@ -157,7 +157,7 @@ mod tests {
         // Spin up a temporary server.
         start_server(buffer, &addr);
 
-        let httper_client = HttperClient::<HttpsClient>::new();
+        let httper_client = HttperClient::new();
 
         let result =
             rt.block_on(httper_client.put(&("http://".to_string() + &addr.to_string()), buffer));
@@ -177,7 +177,7 @@ mod tests {
         // Spin up a temporary server.
         start_server(buffer, &addr);
 
-        let httper_client = HttperClient::<HttpsClient>::new();
+        let httper_client = HttperClient::new();
 
         let data = Data {
             name: "Optimus Prime".to_string(),
@@ -203,7 +203,7 @@ mod tests {
         // Spin up a temporary server.
         start_server(buffer, &addr);
 
-        let httper_client = HttperClient::<HttpsClient>::new();
+        let httper_client = HttperClient::new();
 
         let result =
             rt.block_on(httper_client.patch(&("http://".to_string() + &addr.to_string()), buffer));
@@ -223,7 +223,7 @@ mod tests {
         // Spin up a temporary server.
         start_server(buffer, &addr);
 
-        let httper_client = HttperClient::<HttpsClient>::new();
+        let httper_client = HttperClient::new();
 
         let data = Data {
             name: "Optimus Prime".to_string(),

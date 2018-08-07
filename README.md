@@ -20,13 +20,13 @@ extern crate tokio;
 #[macro_use]
 extern crate serde_derive;
 
-use httper::client::{HttperClient, HttpsClient};
+use httper::client::HttperClient;
 use tokio::runtime::Runtime;
 
 fn main() {
     let mut rt = Runtime::new().unwrap();
 
-    let httper_client = HttperClient::<HttpsClient>::new();
+    let httper_client = HttperClient::new();
 
     #[derive(Debug, Deserialize, PartialEq)]
     struct Contributor {

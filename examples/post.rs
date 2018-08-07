@@ -2,7 +2,7 @@ extern crate httper;
 extern crate hyper;
 extern crate tokio;
 
-use httper::client::{HttperClient, HttpsClient};
+use httper::client::HttperClient;
 use std::net::SocketAddr;
 use std::thread;
 use tokio::prelude::future::Future;
@@ -34,7 +34,7 @@ fn main() {
         start_server(buffer, &addr);
     });
 
-    let httper_client: HttperClient<HttpsClient> = HttperClient::<HttpsClient>::new();
+    let httper_client: HttperClient = HttperClient::new();
 
     let result =
         rt.block_on(httper_client.post(&("http://".to_string() + &addr.to_string()), buffer));

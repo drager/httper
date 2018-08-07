@@ -4,7 +4,7 @@ extern crate tokio;
 #[macro_use]
 extern crate serde_derive;
 
-use httper::client::{HttperClient, HttpsClient};
+use httper::client::HttperClient;
 use std::net::SocketAddr;
 use std::thread;
 use tokio::prelude::future::Future;
@@ -36,7 +36,7 @@ fn main() {
         start_server(buffer, &addr);
     });
 
-    let httper_client: HttperClient<HttpsClient> = HttperClient::<HttpsClient>::new();
+    let httper_client: HttperClient = HttperClient::new();
 
     #[derive(Debug, Deserialize)]
     struct Transformer {
