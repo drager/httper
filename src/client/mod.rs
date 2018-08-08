@@ -100,6 +100,20 @@ impl HttperClient {
         PayloadBuilder::new(self.request_builder(url, hyper::Method::POST), &self)
     }
 
+    /// Prepares a delete request to a given url `&str`.
+    ///
+    /// # Examples
+    /// ```
+    /// use httper::client::HttperClient;
+    ///
+    /// let httper_client = HttperClient::new();
+    ///
+    /// httper_client.delete("http://localhost:9090").send();
+    /// ```
+    pub fn delete(&self, url: &Url) -> PayloadBuilder {
+        PayloadBuilder::new(self.request_builder(url, hyper::Method::DELETE), &self)
+    }
+
     /// Performs a put request to a given url `&str` with
     /// the provided payload that can be turned into a `hyper::Body`.
     ///
