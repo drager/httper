@@ -17,9 +17,12 @@ fn main() {
         login: String,
     }
 
+    // Call .send() to fire the request and then call .json::<Vec<Contributor>>()
+    // to turn the json response into a Vec containing Contributor.
     let result = rt.block_on(
         httper_client
             .get("https://api.github.com/repos/drager/httper/contributors")
+            .send()
             .json::<Vec<Contributor>>(),
     );
 

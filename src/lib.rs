@@ -40,7 +40,7 @@ mod tests {
             .map_err(|e| eprintln!("server error: {}", e));
 
         thread::spawn(|| {
-        hyper::rt::run(server);
+            hyper::rt::run(server);
         });
 
         // Wait for server to start.
@@ -67,7 +67,11 @@ mod tests {
 
         let httper_client = HttperClient::new();
 
-        let result = rt.block_on(httper_client.get(&("http://".to_string() + &addr.to_string())));
+        let result = rt.block_on(
+            httper_client
+                .get(&("http://".to_string() + &addr.to_string()))
+                .send(),
+        );
 
         assert!(result.is_ok());
         let body = result.unwrap().into_body().concat2();
@@ -94,6 +98,7 @@ mod tests {
         let result = rt.block_on(
             httper_client
                 .get(&("http://".to_string() + &addr.to_string()))
+                .send()
                 .json::<Data>(),
         );
 
@@ -113,8 +118,12 @@ mod tests {
 
         let httper_client = HttperClient::new();
 
-        let result =
-            rt.block_on(httper_client.post(&("http://".to_string() + &addr.to_string()), buffer));
+        let result = rt.block_on(
+            httper_client
+                .post(&("http://".to_string() + &addr.to_string()))
+                .payload(buffer)
+                .send(),
+        );
 
         assert!(result.is_ok());
         assert_eq!(hyper::StatusCode::OK, result.unwrap().status());
@@ -139,7 +148,9 @@ mod tests {
 
         let result = rt.block_on(
             httper_client
-                .post(&("http://".to_string() + &addr.to_string()), buffer)
+                .post(&("http://".to_string() + &addr.to_string()))
+                .payload(buffer)
+                .send()
                 .json::<Data>(),
         );
 
@@ -159,8 +170,12 @@ mod tests {
 
         let httper_client = HttperClient::new();
 
-        let result =
-            rt.block_on(httper_client.put(&("http://".to_string() + &addr.to_string()), buffer));
+        let result = rt.block_on(
+            httper_client
+                .put(&("http://".to_string() + &addr.to_string()))
+                .payload(buffer)
+                .send(),
+        );
 
         assert!(result.is_ok());
         assert_eq!(hyper::StatusCode::OK, result.unwrap().status());
@@ -185,7 +200,9 @@ mod tests {
 
         let result = rt.block_on(
             httper_client
-                .put(&("http://".to_string() + &addr.to_string()), buffer)
+                .put(&("http://".to_string() + &addr.to_string()))
+                .payload(buffer)
+                .send()
                 .json::<Data>(),
         );
 
@@ -205,8 +222,12 @@ mod tests {
 
         let httper_client = HttperClient::new();
 
-        let result =
-            rt.block_on(httper_client.patch(&("http://".to_string() + &addr.to_string()), buffer));
+        let result = rt.block_on(
+            httper_client
+                .patch(&("http://".to_string() + &addr.to_string()))
+                .payload(buffer)
+                .send(),
+        );
 
         assert!(result.is_ok());
         assert_eq!(hyper::StatusCode::OK, result.unwrap().status());
@@ -231,7 +252,9 @@ mod tests {
 
         let result = rt.block_on(
             httper_client
-                .patch(&("http://".to_string() + &addr.to_string()), buffer)
+                .patch(&("http://".to_string() + &addr.to_string()))
+                .payload(buffer)
+                .send()
                 .json::<Data>(),
         );
 

@@ -1,3 +1,5 @@
+use self::get::Get;
+use self::payload_builder::PayloadBuilder;
 use self::response_future::ResponseFuture;
 use failure::Error;
 use futures::future;
@@ -9,6 +11,8 @@ use std::collections::HashMap;
 use std::default::Default;
 use std::error;
 
+pub mod get;
+pub mod payload_builder;
 pub mod response_future;
 
 type HttpClient<C> = hyper::Client<C, hyper::Body>;
@@ -50,8 +54,7 @@ pub struct HttperClient {
     headers: HashMap<hyper::header::HeaderName, String>,
 }
 
-impl HttperClient
-{
+impl HttperClient {
     /// Creates a new `HttperClient`.
     ///
     /// # Examples
@@ -61,7 +64,6 @@ impl HttperClient
     ///
     /// let httper_client = HttperClient::new();
     /// ```
-    ///
     pub fn new() -> HttperClient {
         HttperClient {
             ..HttperClient::default()
@@ -77,11 +79,10 @@ impl HttperClient
     ///
     /// let httper_client = HttperClient::new();
     ///
-    /// httper_client.get("https://testing.local");
+    /// httper_client.get("https://testing.local").send();
     /// ```
-    ///
-    pub fn get(&self, url: &Url) -> ResponseFuture {
-        self.request(url, hyper::Method::GET, hyper::Body::empty())
+    pub fn get(&self, url: &Url) -> Get {
+        Get::new(self.request_builder(url, hyper::Method::GET), &self)
     }
 
     /// Performs a post request to a given url `&str` with
@@ -93,14 +94,10 @@ impl HttperClient
     ///
     /// let httper_client = HttperClient::new();
     ///
-    /// httper_client.post("http://localhost:9090", "payload");
+    /// httper_client.post("http://localhost:9090").payload("payload").send();
     /// ```
-    ///
-    pub fn post<P: Into<hyper::Body> + Send>(&self, url: &Url, payload: P) -> ResponseFuture
-    where
-        hyper::Body: From<P>,
-    {
-        self.request(url, hyper::Method::POST, payload)
+    pub fn post(&self, url: &Url) -> PayloadBuilder {
+        PayloadBuilder::new(self.request_builder(url, hyper::Method::POST), &self)
     }
 
     /// Performs a put request to a given url `&str` with
@@ -112,14 +109,10 @@ impl HttperClient
     ///
     /// let httper_client = HttperClient::new();
     ///
-    /// httper_client.put("http://localhost:9090", "payload");
+    /// httper_client.put("http://localhost:9090").payload("payload").send();
     /// ```
-    ///
-    pub fn put<P: Into<hyper::Body> + Send>(&self, url: &Url, payload: P) -> ResponseFuture
-    where
-        hyper::Body: From<P>,
-    {
-        self.request(url, hyper::Method::PUT, payload)
+    pub fn put(&self, url: &Url) -> PayloadBuilder {
+        PayloadBuilder::new(self.request_builder(url, hyper::Method::PUT), &self)
     }
 
     /// Performs a patch request to a given url `&str` with
@@ -131,39 +124,45 @@ impl HttperClient
     ///
     /// let httper_client = HttperClient::new();
     ///
-    /// httper_client.patch("http://localhost:9090", "payload");
+    /// httper_client.patch("http://localhost:9090").payload("payload").send();
     /// ```
-    ///
-    pub fn patch<P: Into<hyper::Body> + Send>(&self, url: &Url, payload: P) -> ResponseFuture
-    where
-        hyper::Body: From<P>,
-    {
-        self.request(url, hyper::Method::PATCH, payload)
+    pub fn patch(&self, url: &Url) -> PayloadBuilder {
+        PayloadBuilder::new(self.request_builder(url, hyper::Method::PATCH), &self)
     }
 
-    fn request<B: Into<hyper::Body> + Send>(
+    /// Get a `http::request::Builder` that will set the
+    /// method and uri.
+    ///
+    /// # Errors
+    /// Will return Err if the url couldn't be parsed into a `hyper::Uri`.
+    fn request_builder(
         &self,
         url: &Url,
         method: hyper::Method,
-        body: B,
-    ) -> ResponseFuture
-    where
-        hyper::Body: From<B>,
-    {
-        let mut request = self.request_with_default_headers();
-        let http_client = self.http_client.clone();
+    ) -> Result<http::request::Builder, Error> {
+        let url = self.parse_url(url)?;
+        let mut builder = self.request_with_default_headers();
+        builder.method(method).uri(url);
+        Ok(builder)
+    }
 
+    /// Sends the request with the given `request_builder` and
+    /// `payload`. Returns a `ResponseFuture`.
+    fn send_request(
+        &self,
+        request_builder: Result<http::request::Builder, Error>,
+        payload: hyper::Body,
+    ) -> ResponseFuture {
+        let http_client = self.http_client.clone();
         ResponseFuture(Box::new(
-            future::result(self.parse_url(url).and_then(|url| {
-                request
-                    .method(method)
-                    .uri(url)
-                    .body(hyper::Body::from(body))
-                    .map_err(Error::from)
+            future::result(request_builder.and_then(|mut request_builder| {
+                request_builder.body(payload).map_err(Error::from)
             })).and_then(move |request| http_client.request(request).map_err(Error::from)),
         ))
     }
 
+    /// Setup a `http::request::Builder` with default headers,
+    /// `self.headers`.
     fn request_with_default_headers(&self) -> http::request::Builder {
         let mut request = hyper::Request::builder();
 
@@ -178,7 +177,6 @@ impl HttperClient
     ///
     /// # Errors
     /// Will return Err if the url couldn't be parsed into a `hyper::Uri`.
-    ///
     fn parse_url(&self, url: &str) -> Result<hyper::Uri, Error> {
         url.parse::<hyper::Uri>().map_err(Error::from)
     }

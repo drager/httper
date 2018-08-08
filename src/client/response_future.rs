@@ -53,7 +53,7 @@ impl ResponseFuture {
     ///         name: "Optimus Prime".to_string(),
     ///     };
     ///
-    ///     httper_client.get("https://testing.local").json::<Data>();
+    ///     httper_client.get("https://testing.local").send().json::<Data>();
     /// }
     /// ```
     ///

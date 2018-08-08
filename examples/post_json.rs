@@ -43,9 +43,15 @@ fn main() {
         name: String,
     }
 
+    // Use .payload("some_payload") to attach payload with the request.
+    // Then call .send() to fire the request.
+    // If you don't want to send any payload, then skip calling .payload()
+    // and call .send() right away.
     let result = rt.block_on(
         httper_client
-            .post(&("http://".to_string() + &addr.to_string()), buffer)
+            .post(&("http://".to_string() + &addr.to_string()))
+            .payload(buffer)
+            .send()
             .json::<Transformer>(),
     );
 

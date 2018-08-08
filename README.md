@@ -28,15 +28,18 @@ fn main() {
 
     let httper_client = HttperClient::new();
 
-    #[derive(Debug, Deserialize, PartialEq)]
+    #[derive(Debug, Deserialize)]
     struct Contributor {
         id: u32,
         login: String,
     }
 
+    // Call .send() to fire the request and then call .json::<Vec<Contributor>>()
+    // to turn the json response into a Vec containing Contributor.
     let result = rt.block_on(
         httper_client
             .get("https://api.github.com/repos/drager/httper/contributors")
+            .send()
             .json::<Vec<Contributor>>(),
     );
 

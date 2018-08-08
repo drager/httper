@@ -9,7 +9,8 @@ fn main() {
 
     let httper_client = HttperClient::new();
 
-    let result = rt.block_on(httper_client.get("https://www.rust-lang.org/en-US/"));
+    // Call .send() to fire the request.
+    let result = rt.block_on(httper_client.get("https://www.rust-lang.org/en-US/").send());
 
     println!("Result: {:?}", result);
 
