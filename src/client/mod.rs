@@ -77,7 +77,7 @@ impl Default for HttperClient {
         let mut headers = HashMap::new();
 
         headers.insert(
-            hyper::header::USER_AGENT,
+            hyper::header::USER_AGENT.as_str().to_string(),
             format!(
                 "{}/{}",
                 PKG_NAME.unwrap_or("unknown_name"),
@@ -92,10 +92,12 @@ impl Default for HttperClient {
     }
 }
 
+pub type Headers = HashMap<String, String>;
+
 #[derive(Debug, Clone)]
 pub struct HttperClient {
     http_client: HttpsClient,
-    headers: HashMap<hyper::header::HeaderName, String>,
+    headers: Headers,
 }
 
 impl HttperClient {
@@ -108,7 +110,7 @@ impl HttperClient {
     ///
     /// let httper_client = HttperClient::new();
     /// ```
-    pub fn new() -> HttperClient {
+    pub fn new() -> Self {
         HttperClient {
             ..HttperClient::default()
         }
@@ -206,7 +208,7 @@ impl HttperClient {
         method: hyper::Method,
     ) -> Result<http::request::Builder, Error> {
         let url = self.parse_url(url)?;
-        let mut builder = self.request_with_default_headers();
+        let mut builder = http::request::Builder::new();
         builder.method(method).uri(url);
         Ok(builder)
     }
@@ -217,25 +219,29 @@ impl HttperClient {
         &self,
         request_builder: Result<http::request::Builder, Error>,
         payload: hyper::Body,
+        headers: Headers,
     ) -> ResponseFuture {
+        // Make key lowercase so when we merge our default headers with the new ones
+        // it will replace the default ones if a new matches it even if the casing
+        // isn't correct.
+        let headers = headers
+            .iter()
+            .map(|(key, value)| (key.to_lowercase(), value.to_string()));
+
+        // Create a new HashMap containing the passed in headers as well
+        // as the default ones.
+        let headers: Headers = self.headers.clone().into_iter().chain(headers).collect();
+
         let http_client = self.http_client.clone();
+
         ResponseFuture(Box::new(
             future::result(request_builder.and_then(|mut request_builder| {
+                headers.iter().for_each(|(k, v)| {
+                    request_builder.header(k.as_str(), v.as_str());
+                });
                 request_builder.body(payload).map_err(Error::from)
             })).and_then(move |request| http_client.request(request).map_err(Error::from)),
         ))
-    }
-
-    /// Setup a `http::request::Builder` with default headers,
-    /// `self.headers`.
-    fn request_with_default_headers(&self) -> http::request::Builder {
-        let mut request = hyper::Request::builder();
-
-        self.headers.iter().for_each(|(k, v)| {
-            request.header(k.as_str(), v.as_str());
-        });
-
-        request
     }
 
     /// Parses the url `&str` to a `hyper::Uri`.
