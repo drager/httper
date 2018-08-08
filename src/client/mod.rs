@@ -70,7 +70,9 @@ impl HttperClient {
         }
     }
 
-    /// Performs a get request to a given url `&str`
+    /// Prepares a `GET` request to a given url `&str`.
+    ///
+    /// Call `.send()` to send the request.
     ///
     /// # Examples
     ///
@@ -85,8 +87,9 @@ impl HttperClient {
         Get::new(self.request_builder(url, hyper::Method::GET), &self)
     }
 
-    /// Performs a post request to a given url `&str` with
-    /// the provided payload that can be turned into a `hyper::Body`.
+    /// Prepares a `POST` request to a given url `&str`.
+    ///
+    /// Call `.send()` to send the request.
     ///
     /// # Examples
     /// ```
@@ -100,7 +103,9 @@ impl HttperClient {
         PayloadBuilder::new(self.request_builder(url, hyper::Method::POST), &self)
     }
 
-    /// Prepares a delete request to a given url `&str`.
+    /// Prepares a `DELETE` request to a given url `&str`.
+    ///
+    /// Call `.send()` to send the request.
     ///
     /// # Examples
     /// ```
@@ -114,8 +119,9 @@ impl HttperClient {
         PayloadBuilder::new(self.request_builder(url, hyper::Method::DELETE), &self)
     }
 
-    /// Performs a put request to a given url `&str` with
-    /// the provided payload that can be turned into a `hyper::Body`.
+    /// Prepares a `PUT` request to a given url `&str`.
+    ///
+    /// Call `.send()` to send the request.
     ///
     /// # Examples
     /// ```
@@ -129,8 +135,9 @@ impl HttperClient {
         PayloadBuilder::new(self.request_builder(url, hyper::Method::PUT), &self)
     }
 
-    /// Performs a patch request to a given url `&str` with
-    /// the provided payload that can be turned into a `hyper::Body`.
+    /// Prepares a `PATCH` request to a given url `&str`.
+    ///
+    /// Call `.send()` to send the request.
     ///
     /// # Examples
     /// ```
