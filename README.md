@@ -1,5 +1,8 @@
 # HTTPer
 [![Build Status](https://travis-ci.org/drager/httper.svg?branch=master)](https://travis-ci.org/drager/httper)
+[![crates.io](https://img.shields.io/crates/v/httper.svg)](https://crates.io/crates/httper)
+[![API docs](https://docs.rs/httper/badge.svg)](https://docs.rs/httper)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/httper.svg)](https://github.com/drager/httper/tree/master/README.md#license)
 
 A asynchronous HTTP(S) client built on top of [hyper](https://github.com/hyperium/hyper/).
 
