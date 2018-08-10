@@ -14,7 +14,12 @@ fn main() {
     headers.insert("Content-Type".to_string(), "application/json".to_string());
 
     // Call .send() to fire the request.
-    let result = rt.block_on(httper_client.get("https://www.rust-lang.org/en-US/").send());
+    let result = rt.block_on(
+        httper_client
+            .get("https://www.rust-lang.org/en-US/")
+            .headers(headers)
+            .send(),
+    );
 
     println!("Result: {:?}", result);
 
