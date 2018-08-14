@@ -76,8 +76,10 @@ impl Default for HttperClient {
 
         let mut headers = HashMap::new();
 
+        let user_agent = hyper::header::USER_AGENT;
+
         headers.insert(
-            hyper::header::USER_AGENT.as_str().to_string(),
+            user_agent.as_str().to_string(),
             format!(
                 "{}/{}",
                 PKG_NAME.unwrap_or("unknown_name"),
