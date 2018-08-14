@@ -50,6 +50,6 @@ impl<'a> Get<'a> {
     /// Sends the request and returns a `ResponseFuture`.
     pub fn send(self) -> ResponseFuture {
         self.client
-            .send_request(self.request_builder, hyper::Body::empty(), self.headers)
+            .send_request(self.request_builder, hyper::Body::empty(), &self.headers)
     }
 }

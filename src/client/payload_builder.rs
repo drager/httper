@@ -75,7 +75,7 @@ impl<'a> PayloadBuilder<'a> {
         self.client.send_request(
             self.request_builder,
             self.payload.unwrap_or_else(|| hyper::Body::empty()),
-            self.headers,
+            &self.headers,
         )
     }
 }

@@ -219,7 +219,7 @@ impl HttperClient {
         &self,
         request_builder: Result<http::request::Builder, Error>,
         payload: hyper::Body,
-        headers: Headers,
+        headers: &Headers,
     ) -> ResponseFuture {
         // Make key lowercase so when we merge our default headers with the new ones
         // it will replace the default ones if a new matches it even if the casing
